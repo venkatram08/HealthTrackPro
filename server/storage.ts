@@ -25,15 +25,15 @@ export interface IStorage {
   getFamilyMembers(userId: number): Promise<FamilyMember[]>;
   addFamilyMember(userId: number, member: Omit<FamilyMember, "id" | "userId">): Promise<FamilyMember>;
 
-  sessionStore: session.SessionStore;
+  sessionStore: any;
 }
 
 export class DatabaseStorage implements IStorage {
-  sessionStore: session.SessionStore;
+  sessionStore: any;
 
   constructor() {
     this.sessionStore = new PostgresSessionStore({
-      pool: db.client,
+      pool: db.$client,
       createTableIfMissing: true,
     });
   }

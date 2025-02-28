@@ -1,16 +1,17 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { insertUserSchema } from "@shared/schema";
+import { insertUserSchema, insertDoctorSchema } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const loginSchema = insertUserSchema.pick({
   username: true,
@@ -20,6 +21,7 @@ const loginSchema = insertUserSchema.pick({
 export default function AuthPage() {
   const [, setLocation] = useLocation();
   const { user, loginMutation, registerMutation } = useAuth();
+  const [isDoctor, setIsDoctor] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -35,8 +37,8 @@ export default function AuthPage() {
     },
   });
 
-  const registerForm = useForm<z.infer<typeof insertUserSchema>>({
-    resolver: zodResolver(insertUserSchema),
+  const registerForm = useForm<z.infer<typeof insertDoctorSchema>>({
+    resolver: zodResolver(isDoctor ? insertDoctorSchema : insertUserSchema),
     defaultValues: {
       username: "",
       password: "",
@@ -44,6 +46,10 @@ export default function AuthPage() {
       dateOfBirth: new Date().toISOString().split("T")[0],
       gender: "",
       bloodType: "",
+      isDoctor: false,
+      licenseNumber: "",
+      specialization: "",
+      hospital: "",
     },
   });
 
@@ -100,6 +106,23 @@ export default function AuthPage() {
               </TabsContent>
 
               <TabsContent value="register">
+                <div className="mb-6">
+                  <RadioGroup
+                    defaultValue="patient"
+                    onValueChange={(value) => setIsDoctor(value === "doctor")}
+                    className="flex space-x-4"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="patient" id="patient" />
+                      <label htmlFor="patient">Register as Patient</label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="doctor" id="doctor" />
+                      <label htmlFor="doctor">Register as Doctor</label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
                 <Form {...registerForm}>
                   <form onSubmit={registerForm.handleSubmit((data) => registerMutation.mutate(data))} className="space-y-4">
                     <FormField
@@ -198,6 +221,51 @@ export default function AuthPage() {
                         </FormItem>
                       )}
                     />
+
+                    {isDoctor && (
+                      <>
+                        <FormField
+                          control={registerForm.control}
+                          name="licenseNumber"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Medical License Number</FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={registerForm.control}
+                          name="specialization"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Specialization</FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={registerForm.control}
+                          name="hospital"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Hospital/Clinic</FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </>
+                    )}
+
                     <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
                       Register
                     </Button>

@@ -10,6 +10,10 @@ export const users = pgTable("users", {
   dateOfBirth: date("date_of_birth").notNull(),
   gender: text("gender").notNull(),
   bloodType: text("blood_type"),
+  isDoctor: boolean("is_doctor").default(false),
+  licenseNumber: text("license_number"),
+  specialization: text("specialization"),
+  hospital: text("hospital"),
 });
 
 export const medicalHistory = pgTable("medical_history", {
@@ -40,6 +44,15 @@ export const familyMembers = pgTable("family_members", {
   hasAccess: boolean("has_access").default(false),
 });
 
+export const doctorAccess = pgTable("doctor_access", {
+  id: serial("id").primaryKey(),
+  patientId: integer("patient_id").notNull(),
+  doctorId: integer("doctor_id").notNull(),
+  grantedAt: timestamp("granted_at").notNull().defaultNow(),
+  expiresAt: timestamp("expires_at"),
+  isActive: boolean("is_active").default(true),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -47,6 +60,17 @@ export const insertUserSchema = createInsertSchema(users).pick({
   dateOfBirth: true,
   gender: true,
   bloodType: true,
+  isDoctor: true,
+  licenseNumber: true,
+  specialization: true,
+  hospital: true,
+});
+
+export const insertDoctorSchema = insertUserSchema.extend({
+  isDoctor: z.literal(true),
+  licenseNumber: z.string().min(1, "License number is required"),
+  specialization: z.string().min(1, "Specialization is required"),
+  hospital: z.string().min(1, "Hospital is required"),
 });
 
 export const insertMedicalHistorySchema = createInsertSchema(medicalHistory).pick({
@@ -71,8 +95,15 @@ export const insertFamilyMemberSchema = createInsertSchema(familyMembers).pick({
   hasAccess: true,
 });
 
+export const insertDoctorAccessSchema = createInsertSchema(doctorAccess).pick({
+  doctorId: true,
+  expiresAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type InsertDoctor = z.infer<typeof insertDoctorSchema>;
 export type User = typeof users.$inferSelect;
 export type MedicalHistory = typeof medicalHistory.$inferSelect;
 export type Vaccine = typeof vaccines.$inferSelect;
 export type FamilyMember = typeof familyMembers.$inferSelect;
+export type DoctorAccess = typeof doctorAccess.$inferSelect;

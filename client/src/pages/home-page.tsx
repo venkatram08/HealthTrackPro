@@ -1,4 +1,4 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,9 +10,17 @@ import {
   Calendar,
   User
 } from "lucide-react";
+import { useEffect } from "react";
 
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (user?.isDoctor) {
+      setLocation("/doctor");
+    }
+  }, [user, setLocation]);
 
   return (
     <div className="min-h-screen bg-gray-50">

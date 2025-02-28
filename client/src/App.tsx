@@ -10,6 +10,7 @@ import AuthPage from "@/pages/auth-page";
 import HomePage from "@/pages/home-page";
 import ProfilePage from "@/pages/profile-page";
 import VaccinesPage from "@/pages/vaccines-page";
+import DoctorPage from "@/pages/doctor-page";
 
 function Router() {
   return (
@@ -18,6 +19,9 @@ function Router() {
       <ProtectedRoute path="/" component={HomePage} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <ProtectedRoute path="/vaccines" component={VaccinesPage} />
+      <ProtectedRoute path="/doctor" component={DoctorPage} />
+      <ProtectedRoute path="/vaccines/:userId" component={VaccinesPage} />
+      <ProtectedRoute path="/medical-history/:userId" component={ProfilePage} />
       <Route component={NotFound} />
     </Switch>
   );

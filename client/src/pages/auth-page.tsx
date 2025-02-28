@@ -53,6 +53,14 @@ export default function AuthPage() {
     },
   });
 
+  // Update form values when switching between patient and doctor
+  useEffect(() => {
+    registerForm.setValue("isDoctor", isDoctor);
+    if (isDoctor) {
+      registerForm.clearErrors();
+    }
+  }, [isDoctor, registerForm]);
+
   return (
     <div className="min-h-screen flex">
       <div className="flex-1 flex items-center justify-center p-8">

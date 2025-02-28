@@ -50,7 +50,19 @@ export const doctorAccess = pgTable("doctor_access", {
   doctorId: integer("doctor_id").notNull(),
   grantedAt: timestamp("granted_at").notNull().defaultNow(),
   expiresAt: timestamp("expires_at"),
-  isActive: boolean("is_active").default(true),
+  status: text("status").notNull().default("pending"), // pending, accepted, rejected
+  isActive: boolean("is_active").default(false),
+});
+
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  type: text("type").notNull(), // access_request, access_response
+  relatedId: integer("related_id"), // doctorAccess id
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -100,6 +112,13 @@ export const insertDoctorAccessSchema = createInsertSchema(doctorAccess).pick({
   expiresAt: true,
 });
 
+export const insertNotificationSchema = createInsertSchema(notifications).pick({
+  title: true,
+  message: true,
+  type: true,
+  relatedId: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertDoctor = z.infer<typeof insertDoctorSchema>;
 export type User = typeof users.$inferSelect;
@@ -107,3 +126,4 @@ export type MedicalHistory = typeof medicalHistory.$inferSelect;
 export type Vaccine = typeof vaccines.$inferSelect;
 export type FamilyMember = typeof familyMembers.$inferSelect;
 export type DoctorAccess = typeof doctorAccess.$inferSelect;
+export type Notification = typeof notifications.$inferSelect;

@@ -13,6 +13,8 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ArrowLeft, Plus, UserCircle } from "lucide-react";
 import { Link } from "wouter";
+import { NotificationList } from "@/components/notification-list";
+import { DoctorSearch } from "@/components/doctor-search";
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -68,34 +70,44 @@ export default function ProfilePage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <UserCircle className="h-5 w-5 text-blue-500" />
-                Personal Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Full Name</label>
-                  <p className="mt-1">{user?.fullName}</p>
+          <div>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <UserCircle className="h-5 w-5 text-blue-500" />
+                  Personal Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Full Name</label>
+                    <p className="mt-1">{user?.fullName}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Date of Birth</label>
+                    <p className="mt-1">{new Date(user?.dateOfBirth!).toLocaleDateString()}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Gender</label>
+                    <p className="mt-1 capitalize">{user?.gender}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Blood Type</label>
+                    <p className="mt-1">{user?.bloodType || "Not specified"}</p>
+                  </div>
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Date of Birth</label>
-                  <p className="mt-1">{new Date(user?.dateOfBirth!).toLocaleDateString()}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Gender</label>
-                  <p className="mt-1 capitalize">{user?.gender}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Blood Type</label>
-                  <p className="mt-1">{user?.bloodType || "Not specified"}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+
+            <div className="mt-6">
+              <NotificationList />
+            </div>
+
+            <div className="mt-6">
+              <DoctorSearch />
+            </div>
+          </div>
 
           <div className="lg:col-span-2">
             <Card>

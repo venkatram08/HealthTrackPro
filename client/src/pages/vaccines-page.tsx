@@ -10,14 +10,20 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ArrowLeft, Plus, Syringe, Calendar } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 
 export default function VaccinesPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [location] = useLocation();
+  const userId = location.split('/')[2]; // Get userId from URL if present
 
   const { data: vaccines, isLoading } = useQuery<Vaccine[]>({
-    queryKey: ["/api/vaccines"],
+    queryKey: ["/api/vaccines", userId],
+    queryFn: async () => {
+      const res = await apiRequest("GET", userId ? `/api/vaccines/${userId}` : "/api/vaccines");
+      return res.json();
+    },
   });
 
   const form = useForm({
@@ -61,7 +67,7 @@ export default function VaccinesPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6 flex items-center gap-4">
-          <Link href="/">
+          <Link href={user?.isDoctor ? "/doctor" : "/"}>
             <Button variant="ghost" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
@@ -72,36 +78,79 @@ export default function VaccinesPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Syringe className="h-5 w-5 text-blue-500" />
-                  Add New Vaccine Record
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit((data) => addVaccineMutation.mutate(data))} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {!userId && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Syringe className="h-5 w-5 text-blue-500" />
+                    Add New Vaccine Record
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit((data) => addVaccineMutation.mutate(data))} className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Vaccine Name</FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="dateAdministered"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Date Administered</FormLabel>
+                              <FormControl>
+                                <Input type="date" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="provider"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Healthcare Provider</FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="batchNumber"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Batch Number</FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                       <FormField
                         control={form.control}
-                        name="name"
+                        name="nextDueDate"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Vaccine Name</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="dateAdministered"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Date Administered</FormLabel>
+                            <FormLabel>Next Due Date (if applicable)</FormLabel>
                             <FormControl>
                               <Input type="date" {...field} />
                             </FormControl>
@@ -109,56 +158,15 @@ export default function VaccinesPage() {
                           </FormItem>
                         )}
                       />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="provider"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Healthcare Provider</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="batchNumber"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Batch Number</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <FormField
-                      control={form.control}
-                      name="nextDueDate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Next Due Date (if applicable)</FormLabel>
-                          <FormControl>
-                            <Input type="date" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button type="submit" disabled={addVaccineMutation.isPending}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Vaccine Record
-                    </Button>
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
+                      <Button type="submit" disabled={addVaccineMutation.isPending}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Vaccine Record
+                      </Button>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+            )}
 
             <Card className="mt-6">
               <CardHeader>
@@ -167,11 +175,11 @@ export default function VaccinesPage() {
               <CardContent>
                 {isLoading ? (
                   <p>Loading...</p>
-                ) : vaccines?.length === 0 ? (
+                ) : !vaccines?.length ? (
                   <p className="text-gray-500">No vaccine records found.</p>
                 ) : (
                   <div className="space-y-4">
-                    {vaccines?.map((vaccine) => (
+                    {vaccines.map((vaccine) => (
                       <div
                         key={vaccine.id}
                         className="p-4 rounded-lg border bg-white"
@@ -212,11 +220,11 @@ export default function VaccinesPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {upcomingVaccines?.length === 0 ? (
+                {!upcomingVaccines?.length ? (
                   <p className="text-gray-500">No upcoming vaccinations scheduled.</p>
                 ) : (
                   <div className="space-y-4">
-                    {upcomingVaccines?.map((vaccine) => (
+                    {upcomingVaccines.map((vaccine) => (
                       <div
                         key={vaccine.id}
                         className="p-4 rounded-lg border bg-white"

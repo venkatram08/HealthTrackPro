@@ -12,16 +12,22 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ArrowLeft, Plus, UserCircle } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { NotificationList } from "@/components/notification-list";
 import { DoctorSearch } from "@/components/doctor-search";
 
 export default function ProfilePage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [location] = useLocation();
+  const userId = location.split('/')[2]; // Get userId from URL if present
 
   const { data: medicalHistory, isLoading: isLoadingHistory } = useQuery<MedicalHistory[]>({
-    queryKey: ["/api/medical-history"],
+    queryKey: ["/api/medical-history", userId],
+    queryFn: async () => {
+      const res = await apiRequest("GET", userId ? `/api/medical-history/${userId}` : "/api/medical-history");
+      return res.json();
+    },
   });
 
   const form = useForm({
@@ -60,13 +66,13 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6 flex items-center gap-4">
-          <Link href="/">
+          <Link href={user?.isDoctor ? "/doctor" : "/"}>
             <Button variant="ghost" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
             </Button>
           </Link>
-          <h1 className="text-2xl font-bold">Profile</h1>
+          <h1 className="text-2xl font-bold">Medical History</h1>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -100,13 +106,17 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
 
-            <div className="mt-6">
-              <NotificationList />
-            </div>
+            {!userId && (
+              <>
+                <div className="mt-6">
+                  <NotificationList />
+                </div>
 
-            <div className="mt-6">
-              <DoctorSearch />
-            </div>
+                <div className="mt-6">
+                  <DoctorSearch />
+                </div>
+              </>
+            )}
           </div>
 
           <div className="lg:col-span-2">
@@ -115,83 +125,85 @@ export default function ProfilePage() {
                 <CardTitle>Medical History</CardTitle>
               </CardHeader>
               <CardContent>
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit((data) => addHistoryMutation.mutate(data))} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {!userId && (
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit((data) => addHistoryMutation.mutate(data))} className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="condition"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Condition</FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="diagnosisDate"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Diagnosis Date</FormLabel>
+                              <FormControl>
+                                <Input type="date" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                       <FormField
                         control={form.control}
-                        name="condition"
+                        name="status"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Condition</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
+                            <FormLabel>Status</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select status" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="active">Active</SelectItem>
+                                <SelectItem value="resolved">Resolved</SelectItem>
+                                <SelectItem value="chronic">Chronic</SelectItem>
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                       <FormField
                         control={form.control}
-                        name="diagnosisDate"
+                        name="notes"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Diagnosis Date</FormLabel>
+                            <FormLabel>Notes</FormLabel>
                             <FormControl>
-                              <Input type="date" {...field} />
+                              <Textarea {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                    </div>
-                    <FormField
-                      control={form.control}
-                      name="status"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Status</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select status" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="active">Active</SelectItem>
-                              <SelectItem value="resolved">Resolved</SelectItem>
-                              <SelectItem value="chronic">Chronic</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="notes"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Notes</FormLabel>
-                          <FormControl>
-                            <Textarea {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button type="submit" disabled={addHistoryMutation.isPending}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Medical History
-                    </Button>
-                  </form>
-                </Form>
+                      <Button type="submit" disabled={addHistoryMutation.isPending}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Medical History
+                      </Button>
+                    </form>
+                  </Form>
+                )}
 
                 <div className="mt-8">
                   <h3 className="font-medium mb-4">History Records</h3>
                   {isLoadingHistory ? (
                     <p>Loading...</p>
-                  ) : medicalHistory?.length === 0 ? (
+                  ) : !medicalHistory?.length ? (
                     <p className="text-gray-500">No medical history records found.</p>
                   ) : (
                     <div className="space-y-4">

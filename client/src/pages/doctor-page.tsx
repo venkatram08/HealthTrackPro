@@ -13,7 +13,7 @@ export default function DoctorPage() {
   const { user, logoutMutation } = useAuth();
   const { toast } = useToast();
 
-  const { data: patients, isLoading } = useQuery<SelectUser[]>({
+  const { data: patients, isLoading: isLoadingPatients } = useQuery<SelectUser[]>({
     queryKey: ["/api/patients"],
   });
 
@@ -155,13 +155,13 @@ export default function DoctorPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {isLoading ? (
+                {isLoadingPatients ? (
                   <p>Loading patients...</p>
-                ) : patients?.length === 0 ? (
+                ) : !patients?.length ? (
                   <p className="text-gray-500">No patients have granted you access yet.</p>
                 ) : (
                   <div className="space-y-4">
-                    {patients?.map((patient) => (
+                    {patients.map((patient) => (
                       <div
                         key={patient.id}
                         className="p-4 rounded-lg border bg-white hover:shadow-md transition-shadow"
